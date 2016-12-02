@@ -1,0 +1,7 @@
+*.user
+*.user.*
+obj
+bin
+*.suo
+*build*
+*temp*
