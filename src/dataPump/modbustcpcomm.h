@@ -29,6 +29,7 @@ public:
     bool getStates();
 signals:
     void modbusCommStateChanged(bool);
+    void modbusCommErr(const QString& s);
 private:
     modbus_mapping_t* mbData;
     modbus_t* mbConnection;

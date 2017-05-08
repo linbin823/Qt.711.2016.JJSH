@@ -26,11 +26,12 @@ Widget::Widget(QWidget *parent) :
     connect(timer,SIGNAL(timeout()),this,SLOT(update()));
     connect(comm,SIGNAL(modbusCommStateChanged(bool)),this,SLOT(stateUpdate(bool)));
     connect(db,SIGNAL(odbcCommStateChanged(bool)),this,SLOT(stateUpdate(bool)));
-
+    connect(comm,SIGNAL(modbusCommErr(QString)),ui->com,SLOT(setText(QString)));
 
     int current = 0;
     foreach( QHostAddress t, QNetworkInterface::allAddresses()){
-        if (t.protocol() == QAbstractSocket::IPv4Protocol && !t.isLoopback()){
+        if (t.protocol() == QAbstractSocket::IPv4Protocol && !t.isLoopback() &&
+                t.toString().left(7) == "192.168" ){
             ui->IP->addItem(t.toString(),QVariant( t.toIPv4Address() ));
             current ++;
         }
@@ -75,10 +76,11 @@ void Widget::update(){
 }
 
 void Widget::stateUpdate(bool state){
-    if(!comm->getStates() )
-        ui->com->setText("Wincc Not Connected!");
-    else
-        ui->com->setText("Wincc Connected!");
+    Q_UNUSED(state)
+//    if(!comm->getStates() )
+//        ui->com->setText("Wincc Not Connected!");
+//    else
+//        ui->com->setText("Wincc Connected!");
 
     if(!db->getStates() )
         ui->db->setText("Remote Database Connection Failed!");

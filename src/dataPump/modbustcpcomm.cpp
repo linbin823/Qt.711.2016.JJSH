@@ -11,15 +11,26 @@
 
 
 ModbusTCPComm::ModbusTCPComm(){
-   mbConnection = modbus_new_tcp(NULL, MODBUS_TCP_DEFAULT_PORT);
+
+    QString ip=NULL;
+    foreach( QHostAddress t, QNetworkInterface::allAddresses()){
+        if (t.protocol() == QAbstractSocket::IPv4Protocol && !t.isLoopback() &&
+                t.toString().left(7) == "192.168" ){
+            ip = t.toString();
+        }
+    }
+
+   mbConnection = modbus_new_tcp(ip.toLocal8Bit().data(), MODBUS_TCP_DEFAULT_PORT);
    if (mbConnection == NULL) {
-//        qDebug()<<"Unable to allocate libmodbus context:"<<modbus_strerror(errno);
+       emit modbusCommErr(modbus_strerror(errno));
+        qDebug()<<"Unable to allocate libmodbus context:"<<modbus_strerror(errno);
    }
 
 
 
    mbData = modbus_mapping_new( 500,500,500,500 );
    if (mbData == NULL) {
+       emit modbusCommErr(modbus_strerror(errno));
 //       qDebug()<<"Failed to allocate the mapping:"<<modbus_strerror(errno);
        modbus_free(mbConnection);
    }
@@ -80,6 +91,7 @@ void ModbusTCPComm::run(){
         memset(&clientaddr, 0, sizeof(clientaddr));
         newfd = accept(listenSocket, (struct sockaddr *)&clientaddr, &addrlen);
         if (newfd == -1) {
+            emit modbusCommErr( modbus_strerror(errno));
 //            qDebug()<<"ModbusTCPComm::run"<<"accepted error";
             continue;
         }
@@ -92,6 +104,7 @@ void ModbusTCPComm::run(){
                 modbus_reply(mbConnection, receiveBuff, rc, mbData);
             }
             else if (rc == -1) {
+                emit modbusCommErr( modbus_strerror(errno));
 //                qDebug()<<"ModbusTCPComm::run"<<"close socket";
                 closesocket(newfd);
                 mdConnected = false;
